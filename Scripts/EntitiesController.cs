@@ -1,3 +1,4 @@
+
 using System.Collections;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ public class EntitiesController : MonoBehaviour {
     [SerializeField, HideInInspector] public int numberOfEntities = 1500;
     #region Hidden Serialized Fields
     [SerializeField, HideInInspector]
-    public float SpeedRangeMin = 0.0f, SpeedRangeMax = 5.0f,
+    public float ScaleRangeMin = 0.1f, ScaleRangeMax = 2.0f, SpeedRangeMin = 0.0f, SpeedRangeMax = 5.0f,
     LifeRangeMin = 0.0f, LifeRangeMax = 5.0f,
     ColorRangeMinRed = 0.0f, ColorRangeMaxRed = 1.0f, ColorRangeMinGreen = 0.0f, ColorRangeMaxGreen = 1.0f, ColorRangeMinBlue = 0.0f, ColorRangeMaxBlue = 1.0f;
     [SerializeField, HideInInspector] public int rotationProcessBatch = 500, fadingProcessBatch = 75;
@@ -78,21 +79,25 @@ public class EntitiesController : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        transform.Rotate(parentRotationAngle, (float)System.Math.Round(parentRotationSpeed * Time.deltaTime, 2, System.MidpointRounding.AwayFromZero));
         for (int i = 0; i < numberOfEntities; i++) {
-            lifeSpan[i] -= Time.deltaTime;
-            if (ProcessInBatches && lifeSpan[i] <= 0) {
-                needToFade[i] = true;
+            if (lifeSpan[i] > 0) {
+                lifeSpan[i] -= (float)System.Math.Round(Time.deltaTime, 2, System.MidpointRounding.AwayFromZero);
+                if (ProcessInBatches && lifeSpan[i] <= 0) {
+                    needToFade[i] = true;
+                }
             }
-            else {
-                transform.Rotate(parentRotationAngle, parentRotationSpeed / spawningSphereRadious * Time.deltaTime);
-                transforms[i].Rotate(angles[i], speeds[i]);
+
+            if (!ProcessInBatches) {
+                transforms[i].Rotate(angles[i], (float)System.Math.Round(speeds[i], 2, System.MidpointRounding.AwayFromZero));
+
                 if (lifeSpan[i] <= 0) {
                     if (prefabRenderers[i].material.color.a <= 0) {
                         InitialisePrefab(i);
                     }
                     else {
                         Color c = prefabRenderers[i].material.color;
-                        c.a -= Time.deltaTime / 10;
+                        c.a -= Time.deltaTime;
                         prefabRenderers[i].material.color = c;
                     }
                 }
@@ -109,8 +114,7 @@ public class EntitiesController : MonoBehaviour {
         int index = 0;
         int batch = rotationProcessBatch;
         while (true) {
-            transform.Rotate(parentRotationAngle, parentRotationSpeed / spawningSphereRadious * Time.deltaTime);
-            transforms[index].Rotate(angles[index], speeds[index] * (numberOfEntities / rotationProcessBatch));
+            transforms[index].Rotate(angles[index], (float)System.Math.Round(speeds[index] * (numberOfEntities / rotationProcessBatch), 2, System.MidpointRounding.AwayFromZero));
             index++;
 
             if (index > batch) {
@@ -164,11 +168,11 @@ public class EntitiesController : MonoBehaviour {
         //Position
         transforms[index].position = Random.insideUnitSphere * spawningSphereRadious;
         // Scale
-        transforms[index].localScale = Vector3.one * Random.Range(0.5f, 5);
+        transforms[index].localScale = Vector3.one * (float)System.Math.Round(Random.Range(ScaleRangeMin, ScaleRangeMax), 1, System.MidpointRounding.AwayFromZero);
         // Speed
-        speeds[index] = Random.Range(SpeedRangeMin, SpeedRangeMax);
+        speeds[index] = (float)System.Math.Round(Random.Range(SpeedRangeMin, SpeedRangeMax), 1, System.MidpointRounding.AwayFromZero);
         // Life-span
-        lifeSpan[index] = Random.Range(LifeRangeMin, LifeRangeMax);
+        lifeSpan[index] = (float)System.Math.Round(Random.Range(LifeRangeMin, LifeRangeMax), 1, System.MidpointRounding.AwayFromZero);
         // Angle
         angles[index] = new Vector3(Random.Range(-1, 2), Random.Range(-1, 2), Random.Range(-1, 2));
         // Renderer color

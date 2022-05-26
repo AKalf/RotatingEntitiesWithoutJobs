@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEditor;
 
 [CustomEditor(typeof(EntitiesController))]
-public class PrefabManager_Inspector : Editor {
+public class EntitiesController_Inspector : Editor {
     EntitiesController context = null;
     Color defaultGUIColor;
     private readonly GUIContent processInBatchesGUIContent = new GUIContent(
@@ -29,6 +29,8 @@ public class PrefabManager_Inspector : Editor {
         base.OnInspectorGUI();
         if (Application.isPlaying == false)
             context.numberOfEntities = EditorGUILayout.IntField("Number of entities: ", context.numberOfEntities);
+        else
+            EditorGUILayout.LabelField("Number of entities: " + context.numberOfEntities);
 
         shouldProcessInBatches = EditorGUILayout.Toggle(processInBatchesGUIContent, context.ProcessInBatches);
         if (shouldProcessInBatches != context.ProcessInBatches && Application.isPlaying) {
@@ -48,6 +50,7 @@ public class PrefabManager_Inspector : Editor {
             context.rotationProcessBatch = EditorGUILayout.IntSlider(rotationBatchGUIContent, context.rotationProcessBatch, 1, context.numberOfEntities);
             context.fadingProcessBatch = EditorGUILayout.IntSlider(fadesBatchGUIContent, context.fadingProcessBatch, 1, context.numberOfEntities);
         }
+
         EditorGUILayout.Space(25);
         EditorGUILayout.LabelField("Cube color range", EditorStyles.whiteLargeLabel);
         MinMaxLayout("Color Range Red", ref context.ColorRangeMinRed, ref context.ColorRangeMaxRed, 0, 1, Color.red);
@@ -57,9 +60,9 @@ public class PrefabManager_Inspector : Editor {
         EditorGUILayout.Space(25);
         EditorGUILayout.LabelField("Entities speed and life range", EditorStyles.whiteLargeLabel);
         RangeLayout(ref context.SpeedRangeMin, ref context.SpeedRangeMax, "speed");
-        MinMaxLayout("Life-time range", ref context.LifeRangeMin, ref context.LifeRangeMax, 1, 100, Color.white);
-        context.LifeRangeMin = (int)context.LifeRangeMin;
-        context.LifeRangeMax = (int)context.LifeRangeMax;
+        MinMaxLayout("Life-time range", ref context.LifeRangeMin, ref context.LifeRangeMax, 1, 100, Color.white, 0);
+        MinMaxLayout("Entity Scale", ref context.ScaleRangeMin, ref context.ScaleRangeMax, 1, 10, Color.white, 1);
+        ;
         EditorGUILayout.Space(20);
         if (context.Transforms != null && context.Transforms.Length > 0) {
             showEntities = EditorGUILayout.Foldout(showEntities, "Show entities inspector (enabling this will decrease editor performance)");
@@ -69,6 +72,7 @@ public class PrefabManager_Inspector : Editor {
                     foldoutsStatus[i] = EditorGUILayout.Foldout(foldoutsStatus[i], trans.name);
                     if (foldoutsStatus[i]) {
                         context.Angles[i] = EditorGUILayout.Vector3Field("Rotating angle: ", context.Angles[i]);
+                        trans.localScale = EditorGUILayout.Vector3Field("Scale: ", trans.localScale);
                         context.Speeds[i] = EditorGUILayout.FloatField("Speed", context.Speeds[i]);
                         context.LifeSpan[i] = EditorGUILayout.FloatField("Life-time: ", context.LifeSpan[i]);
                         context.PrefabsRenderers[i].material.color = EditorGUILayout.ColorField("Color: ", context.PrefabsRenderers[i].material.color);
@@ -90,7 +94,7 @@ public class PrefabManager_Inspector : Editor {
         if (showHorizontal) EditorGUILayout.EndHorizontal();
     }
 
-    private void MinMaxLayout(string mainLable, ref float minValue, ref float maxValue, float minLimit, float maxLimit, Color color) {
+    private void MinMaxLayout(string mainLable, ref float minValue, ref float maxValue, float minLimit, float maxLimit, Color color, int decimals = 2) {
         EditorGUILayout.LabelField(mainLable, EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Min: " + minValue, GUILayout.Width(60));
@@ -99,7 +103,7 @@ public class PrefabManager_Inspector : Editor {
         GUI.color = defaultGUIColor;
         EditorGUILayout.LabelField("Max: " + maxValue);
         EditorGUILayout.EndHorizontal();
-        minValue = (float)Math.Round(minValue, 2);
-        maxValue = (float)Math.Round(maxValue, 2);
+        minValue = (float)Math.Round(minValue, decimals);
+        maxValue = (float)Math.Round(maxValue, decimals);
     }
 }
